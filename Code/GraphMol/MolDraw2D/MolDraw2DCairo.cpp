@@ -12,12 +12,21 @@
 
 #include "MolDraw2DCairo.h"
 #include <cairo.h>
+#include <cstdlib>
 
 namespace RDKit {
 void MolDraw2DCairo::initDrawing() {
   PRECONDITION(dp_cr, "no draw context");
-  cairo_select_font_face(dp_cr, "sans", CAIRO_FONT_SLANT_NORMAL,
+ // cairo_select_font_face(dp_cr, "sans", CAIRO_FONT_SLANT_NORMAL,
+ //                        CAIRO_FONT_WEIGHT_NORMAL);
+  if(const char* env_p = std::getenv("RDKIT_FONTFACE")){
+    cairo_select_font_face(dp_cr, env_p, CAIRO_FONT_SLANT_NORMAL,
                          CAIRO_FONT_WEIGHT_NORMAL);
+  }
+  else{
+    cairo_select_font_face(dp_cr, "sans", CAIRO_FONT_SLANT_NORMAL,
+                         CAIRO_FONT_WEIGHT_NORMAL);
+  }
   cairo_set_font_size(dp_cr, fontSize());
   cairo_set_line_cap(dp_cr, CAIRO_LINE_CAP_BUTT);
 }

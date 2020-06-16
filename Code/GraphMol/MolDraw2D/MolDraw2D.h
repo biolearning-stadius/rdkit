@@ -593,6 +593,7 @@ class RDKIT_MOLDRAW2D_EXPORT MolDraw2D {
   std::vector<std::vector<Point2D>> at_cds_;  // from mol
   std::vector<std::vector<int>> atomic_nums_;
   std::vector<std::vector<std::pair<std::string, OrientType>>> atom_syms_;
+  std::vector<std::vector<std::pair<std::string, std::string>>> atom_symcharges_;
   std::vector<std::vector<std::shared_ptr<StringRect>>> atom_notes_;
   std::vector<std::vector<std::shared_ptr<StringRect>>> bond_notes_;
 
@@ -746,6 +747,8 @@ class RDKIT_MOLDRAW2D_EXPORT MolDraw2D {
       const Atom &atom, const ROMol &mol) const;
   std::string getAtomSymbol(const Atom &atom) const;
   OrientType getAtomOrientation(const Atom &atom, const Point2D &nbr_sum) const;
+  std::pair<std::string, std::string> getAtomSymbolAndCharge(
+      const Atom &atom) const;
 
   // things used by calculateScale.
   void adjustScaleForAtomLabels(const std::vector<int> *highlight_atoms,

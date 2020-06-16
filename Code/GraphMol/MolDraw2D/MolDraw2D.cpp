@@ -27,6 +27,10 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+// to_string example
+#include <iostream>   // std::cout
+#include <string>     // std::string, std::to_string
+#include <fstream>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
@@ -1326,6 +1330,7 @@ void MolDraw2D::pushDrawDetails() {
   at_cds_.push_back(std::vector<Point2D>());
   atomic_nums_.push_back(std::vector<int>());
   atom_syms_.push_back(std::vector<std::pair<std::string, OrientType>>());
+  atom_symcharges_.push_back(std::vector<std::pair<std::string, std::string>>());
   atom_notes_.push_back(std::vector<std::shared_ptr<StringRect>>());
   bond_notes_.push_back(std::vector<std::shared_ptr<StringRect>>());
   activeMolIdx_++;
@@ -1337,6 +1342,7 @@ void MolDraw2D::popDrawDetails() {
   bond_notes_.pop_back();
   atom_notes_.pop_back();
   atom_syms_.pop_back();
+  atom_symcharges_.pop_back();
   atomic_nums_.pop_back();
   at_cds_.pop_back();
 }
@@ -1940,6 +1946,7 @@ void MolDraw2D::extractAtomSymbols(const ROMol &mol) {
   for (auto at1 : mol.atoms()) {
     atom_syms_[activeMolIdx_].emplace_back(
         getAtomSymbolAndOrientation(*at1, mol));
+    atom_symcharges_[activeMolIdx_].emplace_back(getAtomSymbolAndCharge(*at1));
     atomic_nums_[activeMolIdx_].emplace_back(at1->getAtomicNum());
   }
 }
@@ -2023,7 +2030,65 @@ void MolDraw2D::drawBond(
   const Atom *at2 = mol.getAtomWithIdx(at2_idx);
   Point2D at1_cds = at_cds_[activeMolIdx_][at1_idx];
   Point2D at2_cds = at_cds_[activeMolIdx_][at2_idx];
-
+  Bond::BondType btype = bond->getBondType(); 
+  std::string bond_type = "1.0";
+  std::string strDir;
+//  std::string file_path = std::getenv("RDKIT_LABELPATH");
+  if(const char* env_p = std::getenv("RDKIT_LABELPATH")){
+        if (Bond::SINGLE == btype && (Bond::BEGINWEDGE == bond->getBondDir() ||
+                                      Bond::BEGINDASH == bond->getBondDir())) {
+            if ((at1->getChiralTag() != Atom::CHI_TETRAHEDRAL_CW &&
+                 at1->getChiralTag() != Atom::CHI_TETRAHEDRAL_CCW) ||
+                (at1->getIdx() != bond->getBeginAtomIdx() &&
+                (at2->getChiralTag() == Atom::CHI_TETRAHEDRAL_CW ||
+                 at2->getChiralTag() == Atom::CHI_TETRAHEDRAL_CCW))) {
+                  strDir = ".5";
+            }
+            else{
+                  strDir = ".0";
+            }
+            if (Bond::BEGINWEDGE == bond->getBondDir()) {
+                bond_type = "4"+strDir;
+            } else {
+                bond_type = "5"+strDir;
+            }
+        }
+        else{
+           if(Bond::SINGLE == btype){
+              bond_type = "1.0";
+           }
+           if(Bond::DOUBLE == btype){
+              bond_type = "2.0";
+           }
+           if(Bond::TRIPLE == btype){
+              bond_type = "3.0";
+           }
+        }
+        int id;
+        if(const char* labelid = std::getenv("RDKIT_LABELID")){
+            id = atoi(labelid);  
+        }
+        else{
+            //labelid = "0";
+            id=0;
+        }
+        //int offset_id = bond->getIdx();
+        std::cout << "Your PATH is: " << env_p << '\n';
+        std::ofstream label_file;
+        Point2D test1_cds = getDrawCoords(at1_cds);
+        Point2D test2_cds = getDrawCoords(at2_cds);
+        int bond_index = bond->getIdx();
+        std::string index = std::to_string(id)+std::to_string(bond_index);
+        //index = std::to_string(id);
+        std::string symbol1 = at1->getSymbol();
+        std::string symbol2 = at2->getSymbol();
+        std::string charge1 = std::to_string(at1->getFormalCharge());
+        std::string charge2 = std::to_string(at2->getFormalCharge());
+        std::string line = index+","+std::to_string(id)+","+bond_type+","+symbol1+","+charge1+ ","+symbol2+","+charge2+","+std::to_string(test1_cds.x)+","+std::to_string(test1_cds.y)+","+std::to_string(test2_cds.x)+","+std::to_string(test2_cds.y);
+        label_file.open(env_p, std::ios_base::app);
+        label_file << line << '\n';
+  }
+ // std::cout << file_path << '\n';
   double double_bond_offset = options_.multipleBondOffset;
   // mol files from, for example, Marvin use a bond length of 1 for just about
   // everything. When this is the case, the default multipleBondOffset is just
@@ -2234,6 +2299,31 @@ void MolDraw2D::drawAtomLabel(int atom_num,
 
 // ****************************************************************************
 void MolDraw2D::drawAtomLabel(int atom_num, const DrawColour &draw_colour) {
+  if(const char* env_p = std::getenv("RDKIT_LABELPATH")){
+     //const Atom *at = mol.getAtomWithIdx(atom_num);
+     Point2D at_cds = at_cds_[activeMolIdx_][atom_num];
+     int id;
+     if(const char* labelid = std::getenv("RDKIT_LABELID")){
+            id = atoi(labelid);
+     }
+     else{
+            //labelid = "0";
+            id=0;
+     }
+        //int offset_id = bond->getIdx();
+     std::string bond_type = "nobond";
+     std::ofstream label_file;
+     Point2D test_cds = getDrawCoords(at_cds);
+     std::string index = std::to_string(id)+"00"+std::to_string(atom_num);
+     //std::string symbol = at->getSymbol();
+     //std::string charge = std::to_string(at->getFormalCharge());
+     std::string symbol = atom_symcharges_[activeMolIdx_][atom_num].first;
+     std::string charge = atom_symcharges_[activeMolIdx_][atom_num].second;
+     std::string line = index+","+std::to_string(id)+","+bond_type+","+symbol+","+charge+ ","+symbol+","+charge+","+std::to_string(test_cds.x)+","+std::to_string(test_cds.y)+","+std::to_string(test_cds.x)+","+std::to_string(test_cds.y);
+     label_file.open(env_p, std::ios_base::app);
+     label_file << line << '\n';
+
+  }
   setColour(draw_colour);
   vector<string> label_pieces = atomLabelToPieces(atom_num);
   OrientType orient = atom_syms_[activeMolIdx_][atom_num].second;
@@ -2934,6 +3024,16 @@ pair<string, MolDraw2D::OrientType> MolDraw2D::getAtomSymbolAndOrientation(
   //           << " nbr_sum:" << nbr_sum << std::endl << std::endl;
 
   return std::make_pair(symbol, orient);
+}
+
+// ****************************************************************************
+std::pair<std::string, std::string> MolDraw2D::getAtomSymbolAndCharge(const Atom &atom) const {
+  std::cout << "entering ....";
+  std::string symbol = atom.getSymbol();
+  std::string charge = std::to_string(atom.getFormalCharge());
+  std::cout << "returning ....";
+  
+  return std::make_pair(symbol, charge);
 }
 
 // ****************************************************************************
