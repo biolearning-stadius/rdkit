@@ -62,3 +62,4 @@ d.FinishDrawing()
 with open('0.png', 'wb') as f:   
    f.write(d.GetDrawingText())
 ```
+Now the labels should be in the `labels_rdkit` file.
