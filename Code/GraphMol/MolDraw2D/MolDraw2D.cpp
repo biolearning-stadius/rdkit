@@ -2073,7 +2073,6 @@ void MolDraw2D::drawBond(
             id=0;
         }
         //int offset_id = bond->getIdx();
-        std::cout << "Your PATH is: " << env_p << '\n';
         std::ofstream label_file;
         Point2D test1_cds = getDrawCoords(at1_cds);
         Point2D test2_cds = getDrawCoords(at2_cds);
@@ -3028,10 +3027,8 @@ pair<string, MolDraw2D::OrientType> MolDraw2D::getAtomSymbolAndOrientation(
 
 // ****************************************************************************
 std::pair<std::string, std::string> MolDraw2D::getAtomSymbolAndCharge(const Atom &atom) const {
-  std::cout << "entering ....";
   std::string symbol = atom.getSymbol();
   std::string charge = std::to_string(atom.getFormalCharge());
-  std::cout << "returning ....";
   
   return std::make_pair(symbol, charge);
 }
