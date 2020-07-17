@@ -52,7 +52,7 @@ conda env config vars set PYTHONPATH=<install-dir>/rdkit/
 
 ```python
 from rdkit import Chem
-from rdkit.Chem.Draw import rdMolDraw2
+from rdkit.Chem.Draw import rdMolDraw2D
 import os
 os.environ["RDKIT_LABELPATH"] = "labels_rdkit" 
 mol = Chem.MolFromSmiles('Cl[C@H](F)NC\C=C\C')
