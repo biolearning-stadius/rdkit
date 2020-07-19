@@ -1,6 +1,6 @@
 # RDKit fork
 
-This is a fork from [rdkit/rdkit](https://github.com/rdkit/rdkit). This fork adds the possibility to produce detailed labelling information for 2D images of chemical compounds produced by RDkit. This can be useful for machine learning tools.
+This is a fork from [rdkit/rdkit](https://github.com/rdkit/rdkit). This fork adds the possibility to produce detailed labelling information for 2D images of chemical compounds produced by RDkit. This can be useful for machine learning tools like [ChemGrapher] (https://arxiv.org/abs/2002.09914).
 To make use of this fork you can find below some installation instructions and example code.
 However the official repository README you can find [here](https://github.com/rdkit/rdkit).
 
